@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>背景画像設定</title>
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+               script-src 'self';
+               style-src 'self' 'unsafe-inline';
+               img-src 'self' data: file:;
+               media-src 'self' blob:;">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: #1e1e1e;
+      color: #e0e0e0;
+      overflow: hidden;
+    }
+    .header {
+      padding: 20px;
+      background: #252525;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      color: #fff;
+    }
+    .container {
+      display: flex;
+      height: calc(100vh - 140px);
+    }
+    .left-panel {
+      flex: 0 0 60%;
+      overflow-y: auto;
+      padding: 20px;
+      padding-right: 15px;
+    }
+    .right-panel {
+      flex: 0 0 40%;
+      padding: 20px;
+      background: #252525;
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      position: sticky;
+      top: 0;
+    }
+    .footer {
+      padding: 15px 20px;
+      background: #252525;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: flex-end;
+    }
+    .section {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+    }
+    .preview-wrapper {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .preview-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #fff;
+      align-self: flex-start;
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+    .control-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 13px;
+      color: #cfcfcf;
+    }
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #4a9eff;
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #4a9eff;
+      cursor: pointer;
+      border: none;
+    }
+    .value-display {
+      display: inline-block;
+      min-width: 50px;
+      text-align: right;
+      font-weight: 600;
+      color: #4a9eff;
+    }
+    .slider-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .slider-controls input[type="range"] {
+      flex: 1;
+    }
+    .step-buttons {
+      display: flex;
+      gap: 4px;
+    }
+    .btn-step {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border: none;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #e0e0e0;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-step:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .btn-step:active {
+      background: rgba(74, 158, 255, 0.3);
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #4a9eff;
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: #3a8eef;
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #e0e0e0;
+      margin-left: 10px;
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    .btn-danger {
+      background: #e74c3c;
+      color: #fff;
+      margin-left: 10px;
+    }
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+    .preview-container {
+      width: 521px;
+      height: 149px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      margin-bottom: 20px;
+    }
+    .preview {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      background: rgba(30, 30, 30, 0.6);
+      backdrop-filter: blur(6px);
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    .preview-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .preview-content {
+      position: relative;
+      z-index: 1;
+      padding: 12px 16px;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    .preview-time {
+      font-size: 32px;
+      letter-spacing: 1px;
+      font-variant-numeric: tabular-nums;
+      color: #fff;
+    }
+    .preview-row {
+      width: 100%;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .preview-status {
+      font-size: 11px;
+      color: #e0e0e0;
+    }
+    .preview-badge {
+      margin-top: 4px;
+      padding: 3px 6px;
+      border-radius: 6px;
+      font-size: 10px;
+      color: #111;
+      background: #ffd54d;
+      display: inline-block;
+    }
+    .preview-hint {
+      margin-top: 4px;
+      font-size: 10px;
+      color: #cfcfcf;
+    }
+    .left-panel::-webkit-scrollbar {
+      width: 8px;
+    }
+    .left-panel::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .left-panel::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+    .left-panel::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    .info {
+      font-size: 12px;
+      color: #888;
+      margin-top: 5px;
+    }
+    .shortcut-input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #e0e0e0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 14px;
+      font-family: monospace;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .shortcut-input:focus {
+      outline: none;
+      border-color: #4a9eff;
+      background: rgba(74, 158, 255, 0.1);
+    }
+    .shortcut-input.recording {
+      border-color: #ffd54d;
+      background: rgba(255, 213, 77, 0.1);
+    }
+    .color-picker {
+      width: 60px;
+      height: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      background: transparent;
+      cursor: pointer;
+      vertical-align: middle;
+    }
+    .color-value {
+      display: inline-block;
+      margin-left: 10px;
+      font-family: monospace;
+      color: #4a9eff;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>背景画像設定</h2>
+  </div>
+
+  <div class="container">
+    <div class="left-panel">
+      <div class="section">
+    <div class="section-title">画像選択</div>
+    <button id="selectImageBtn" class="btn-primary">画像を選択</button>
+    <button id="clearImageBtn" class="btn-danger">背景をクリア</button>
+    <div class="info" id="imageInfo">画像が選択されていません</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">調整</div>
+
+    <div class="control-group">
+      <label>
+        拡大/縮小: <span class="value-display" id="scaleValue">100%</span>
+      </label>
+      <div class="slider-controls">
+        <input type="range" id="scaleSlider" min="10" max="500" value="100" step="5">
+        <div class="step-buttons">
+          <button class="btn-step" data-target="scale" data-step="-5">−</button>
+          <button class="btn-step" data-target="scale" data-step="5">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label>
+        横位置: <span class="value-display" id="offsetXValue">0px</span>
+      </label>
+      <div class="slider-controls">
+        <input type="range" id="offsetXSlider" min="-500" max="500" value="0" step="10">
+        <div class="step-buttons">
+          <button class="btn-step" data-target="offsetX" data-step="-1">−</button>
+          <button class="btn-step" data-target="offsetX" data-step="1">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label>
+        縦位置: <span class="value-display" id="offsetYValue">0px</span>
+      </label>
+      <div class="slider-controls">
+        <input type="range" id="offsetYSlider" min="-500" max="500" value="0" step="10">
+        <div class="step-buttons">
+          <button class="btn-step" data-target="offsetY" data-step="-1">−</button>
+          <button class="btn-step" data-target="offsetY" data-step="1">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label>
+        不透明度: <span class="value-display" id="opacityValue">80%</span>
+      </label>
+      <div class="slider-controls">
+        <input type="range" id="opacitySlider" min="0" max="100" value="80" step="5">
+        <div class="step-buttons">
+          <button class="btn-step" data-target="opacity" data-step="-5">−</button>
+          <button class="btn-step" data-target="opacity" data-step="5">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">外観設定</div>
+
+    <div class="control-group">
+      <label>カスタムフォント (.ttf/.otf)</label>
+      <button id="selectFontBtn" class="btn-primary">フォントを選択</button>
+      <button id="clearFontBtn" class="btn-danger">フォントをクリア</button>
+      <div class="info" id="fontInfo">デフォルトフォントを使用中</div>
+    </div>
+
+    <div class="control-group">
+      <label>時刻の文字色</label>
+      <input type="color" id="timeColorPicker" value="#ffffff" class="color-picker">
+      <span class="color-value" id="timeColorValue">#ffffff</span>
+    </div>
+
+    <div class="control-group">
+      <label>ステータスの文字色</label>
+      <input type="color" id="statusColorPicker" value="#e0e0e0" class="color-picker">
+      <span class="color-value" id="statusColorValue">#e0e0e0</span>
+    </div>
+
+    <div class="control-group">
+      <label>バッジの背景色</label>
+      <input type="color" id="badgeColorPicker" value="#ffd54d" class="color-picker">
+      <span class="color-value" id="badgeColorValue">#ffd54d</span>
+    </div>
+
+    <div class="control-group">
+      <label>バッジの文字色</label>
+      <input type="color" id="badgeTextColorPicker" value="#111111" class="color-picker">
+      <span class="color-value" id="badgeTextColorValue">#111111</span>
+    </div>
+
+    <div class="control-group">
+      <label>オーバーレイ背景色</label>
+      <input type="color" id="overlayBgColorPicker" value="#1e1e1e" class="color-picker">
+      <span class="color-value" id="overlayBgColorValue">#1e1e1e</span>
+    </div>
+
+    <div class="control-group">
+      <label>
+        オーバーレイ背景の不透明度: <span class="value-display" id="overlayBgOpacityValue">60%</span>
+      </label>
+      <div class="slider-controls">
+        <input type="range" id="overlayBgOpacitySlider" min="0" max="100" value="60" step="5">
+        <div class="step-buttons">
+          <button class="btn-step" data-target="overlayBgOpacity" data-step="-5">−</button>
+          <button class="btn-step" data-target="overlayBgOpacity" data-step="5">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <button id="resetAppearanceBtn" class="btn-secondary" style="margin-left: 0;">外観をデフォルトに戻す</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">ショートカットキー設定</div>
+
+    <div class="control-group">
+      <label>開始/停止</label>
+      <input type="text" id="shortcutToggle" class="shortcut-input" placeholder="例: CommandOrControl+S" readonly>
+      <div class="info">クリックしてキーを押してください（Ctrl, Shift, Alt, Command と組み合わせ）</div>
+    </div>
+
+    <div class="control-group">
+      <label>午前フェーズ (0:00)</label>
+      <input type="text" id="shortcutPhase1" class="shortcut-input" placeholder="例: CommandOrControl+1" readonly>
+    </div>
+
+    <div class="control-group">
+      <label>午前収縮 (4:30)</label>
+      <input type="text" id="shortcutPhase2" class="shortcut-input" placeholder="例: CommandOrControl+2" readonly>
+    </div>
+
+    <div class="control-group">
+      <label>午後フェーズ (7:30)</label>
+      <input type="text" id="shortcutPhase3" class="shortcut-input" placeholder="例: CommandOrControl+3" readonly>
+    </div>
+
+    <div class="control-group">
+      <label>午後収縮 (11:00)</label>
+      <input type="text" id="shortcutPhase4" class="shortcut-input" placeholder="例: CommandOrControl+4" readonly>
+    </div>
+
+    <div class="control-group">
+      <button id="resetShortcutsBtn" class="btn-secondary" style="margin-left: 0;">デフォルトに戻す</button>
+    </div>
+  </div>
+
+  <div class="section" id="voicevoxSection">
+    <div class="section-title">VOICEVOX音声設定</div>
+
+    <div id="voicevoxStatus" class="info" style="margin-bottom: 15px;">
+      接続確認中...
+    </div>
+
+    <div id="voicevoxControls" style="display: none;">
+      <div class="control-group">
+        <label>VOICEVOXパス</label>
+        <button id="selectVoicevoxPathBtn" class="btn-primary">実行ファイルを選択</button>
+        <button id="launchVoicevoxBtn" class="btn-secondary">VOICEVOXを起動</button>
+        <div class="info" id="voicevoxPathInfo">デフォルトパスを使用</div>
+      </div>
+
+      <div class="control-group">
+        <label>音声キャラクター</label>
+        <select id="speakerSelect" style="width: 100%; padding: 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.1); color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.2); font-size: 14px;">
+          <option value="">読み込み中...</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>
+          音量: <span class="value-display" id="volumeValue">100%</span>
+        </label>
+        <div class="slider-controls">
+          <input type="range" id="volumeSlider" min="0" max="100" value="100" step="5">
+          <div class="step-buttons">
+            <button class="btn-step" data-target="volume" data-step="-5">−</button>
+            <button class="btn-step" data-target="volume" data-step="5">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <button id="testVoiceBtn" class="btn-secondary" style="margin-left: 0;">音声テスト</button>
+      </div>
+    </div>
+
+    <div id="voicevoxError" style="display: none;">
+      <p style="color: #e74c3c; margin: 10px 0;">VOICEVOXに接続できません</p>
+      <p style="font-size: 12px; color: #888;">
+        VOICEVOXを起動してから、再度設定画面を開いてください。<br>
+        <a href="https://voicevox.hiroshiba.jp/" target="_blank" style="color: #4a9eff;">VOICEVOXダウンロード</a>
+      </p>
+    </div>
+  </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="preview-wrapper">
+        <div class="preview-title">プレビュー</div>
+        <div class="preview-container">
+          <div class="preview" id="preview">
+            <div class="preview-bg" id="previewBg"></div>
+            <div class="preview-content">
+              <div class="preview-row">
+                <div class="preview-time">04:30</div>
+                <div class="preview-status">計測中：収縮中</div>
+              </div>
+              <div class="preview-badge">収縮中</div>
+              <div class="preview-hint">1回目 4:30〜7:30／2回目 11:00〜14:00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <button id="applyBtn" class="btn-primary">適用</button>
+    <button id="saveBtn" class="btn-primary">保存</button>
+    <button id="closeBtn" class="btn-secondary">閉じる</button>
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>

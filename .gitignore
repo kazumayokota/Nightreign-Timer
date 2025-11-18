@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+dist/
+*.exe
+*.msi
+*.dmg
+*.zip
+*.tar.gz
+
+# User data
+%APPDATA%/overlay-timer/
+
+# Development
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Environment
+.env
+.env.local
+
+# Temporary files
+*.tmp
+*.temp
+~*
