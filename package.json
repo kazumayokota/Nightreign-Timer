@@ -4,12 +4,13 @@
   "description": "Always-on-top overlay timer with global hotkey",
   "main": "main.js",
   "author": "Your Name",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "start": "electron .",
     "start:prod": "cross-env NODE_ENV=production electron .",
-    "build": "electron-builder --win --x64",
-    "build:portable": "electron-builder --win portable",
+    "build": "electron-builder --win nsis --x64",
+    "build:all": "electron-builder --win --x64",
+    "build:portable": "electron-builder --win portable --x64",
     "pack": "electron-packager . OverlayTimer --platform=darwin,win32 --arch=x64,arm64 --overwrite --prune=true --out=dist"
   },
   "build": {
@@ -26,7 +27,6 @@
           "arch": ["x64"]
         }
       ],
-      "icon": "build/icon.ico",
       "artifactName": "${productName}-${version}-${arch}.${ext}"
     },
     "nsis": {
@@ -35,8 +35,6 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Nightreign Timer",
-      "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico",
       "license": "LICENSE"
     },
     "files": [

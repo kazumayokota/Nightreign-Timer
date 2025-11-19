@@ -77,7 +77,7 @@
     offsetX: 0,
     offsetY: 0,
     opacity: 80,
-    speakerId: 8, // デフォルトスピーカーID
+    speakerId: 1, // デフォルトスピーカーID（四国めたん ノーマル）
     volume: 100,   // デフォルト音量100%
     shortcuts: { ...DEFAULT_SHORTCUTS },
     appearance: { ...DEFAULT_APPEARANCE },
