@@ -27,25 +27,26 @@
   });
 
   // ======== 定数 ========
-  // 計測の終了時刻（14:00 = 14 * 60 秒）
-  const END_TIME_SEC = 14 * 60;
+  // --- タイミング設定 ---
+  const END_TIME_SEC = 14 * 60; // 計測の終了時刻（14:00 = 840秒）
 
-  // 収縮ウィンドウ（表示の点滅制御用）
-  // 1回目: 4:30〜7:30（= 開始 270 秒、継続 180 秒）
-  // 2回目: 11:00〜14:00（= 開始 660 秒、継続 180 秒）
+  // --- 収縮ウィンドウの定義 ---
+  // 収縮中は背景が点滅し、「収縮中」バッジが表示される
   const contractionWindows = [
-    { startSec: 4 * 60 + 30, durationSec: 3 * 60 }, // 4:30〜7:30
-    { startSec: 11 * 60,     durationSec: 3 * 60 }  // 11:00〜14:00
+    { startSec: 4 * 60 + 30, durationSec: 3 * 60 }, // 午前収縮: 4:30〜7:30 (270〜450秒)
+    { startSec: 11 * 60,     durationSec: 3 * 60 }  // 午後収縮: 11:00〜14:00 (660〜840秒)
   ];
 
-  // 1回だけ出すメッセージの里程標
-  // 4:20  「収縮10秒前です。」
-  // 4:25  「収縮5秒前です。」
-  // 4:30  「午前の収縮が開始されます。安全エリア内に退避してください。」
-  // 7:30  「午後が始まります。」
-  // 10:50 「収縮10秒前です。」
-  // 10:55 「収縮5秒前です。」
-  // 11:00 「間も無く最後の収縮が始まります。」
+  // --- 1回だけ発火するメッセージ（マイルストーン） ---
+  // | 時刻  | メッセージ内容 |
+  // |-------|----------------|
+  // | 4:20  | 収縮10秒前 |
+  // | 4:25  | 収縮5秒前 |
+  // | 4:30  | 午前収縮開始 |
+  // | 7:30  | 午後開始 |
+  // | 10:50 | 収縮10秒前 |
+  // | 10:55 | 収縮5秒前 |
+  // | 11:00 | 最後の収縮 |
   const oneShotMilestones = [
     { sec: 4 * 60 + 20, text: '収縮10秒前です。' },
     { sec: 4 * 60 + 25, text: '収縮5秒前です。' },
@@ -56,9 +57,18 @@
     { sec: 11 * 60,     text: '間も無く最後の収縮が始まります。' }
   ];
 
-  // 2回目の収縮中に 1分ごとに出すメッセージ（11:05, 12:00, 13:00）
-  // 11:00 は oneShotMilestones と被るため 11:05 から開始（時間差で情報提供）
-  const periodicDuringSecond = [11 * 60 + 5, 12 * 60, 13 * 60];
+  // --- 周期的に発火するメッセージ（午後収縮中のリマインダー） ---
+  // 11:00は「最後の収縮」と被るため11:05から開始
+  // | 時刻  | メッセージ |
+  // |-------|------------|
+  // | 11:05 | 退避を促す |
+  // | 12:00 | 退避を促す |
+  // | 13:00 | 退避を促す |
+  const periodicDuringSecond = [
+    11 * 60 + 5,  // 11:05 (665秒)
+    12 * 60,      // 12:00 (720秒)
+    13 * 60       // 13:00 (780秒)
+  ];
 
   // ======== 設定（TTS） ========
   // 例: ずんだもん(ノーマル)=3, 四国めたん(ノーマル)=2
@@ -75,6 +85,11 @@
   let lastShownMessageTimer = null;   // メッセージ自動非表示のタイマーID
   const firedMilestones = new Set();  // 一度だけのメッセージ発火済み時刻の集合（秒）
   const firedPeriodic = new Set();    // 周期メッセージ発火済み時刻の集合（秒）
+
+  // ======== 差分レンダリング用キャッシュ（パフォーマンス最適化） ========
+  let lastDisplayedTime = '';         // 前回表示した時刻文字列
+  let lastStatusText = '';            // 前回表示したステータス
+  let lastContractionState = false;   // 前回の収縮状態
 
   // ======== オーディオ再生（簡易プレイヤ） ========
   async function speak(text) {
@@ -209,18 +224,30 @@
     statusEl.textContent = '一時停止中（Command Or Control+S で再開）';
   }
 
+  /**
+   * タイマーをリセット（初期状態に戻す）
+   */
   function reset() {
     ticking = false;
     finished = false;
     startEpoch = null;
     elapsedWhenPausedMs = 0;
     cancelAnimationFrame(rAF);
+
+    // 表示をリセット
     setTime(0);
     statusEl.textContent = '待機中（Command Or Control+Sで開始）';
     setContraction(false);
     hideMessage();
+
+    // 発火済みマイルストーンをクリア
     firedMilestones.clear();
     firedPeriodic.clear();
+
+    // キャッシュをクリア（次回の差分レンダリングのため）
+    lastDisplayedTime = '';
+    lastStatusText = '';
+    lastContractionState = false;
   }
 
   // 14:00 到達時の終了処理（停止→即リセット）
@@ -238,31 +265,39 @@
   }
 
   // ======== メインループ ========
+  /**
+   * タイマーのメインループ（requestAnimationFrameで呼ばれる）
+   * 処理順序:
+   * 1. 経過時間を計算
+   * 2. 終了判定（14:00到達チェック）
+   * 3. 時刻表示を更新
+   * 4. 収縮状態を更新
+   * 5. メッセージ発火判定
+   * 6. 次のフレームをスケジュール
+   */
   function loop() {
     if (!ticking) return;
 
+    // --- ステップ1: 経過時間を計算 ---
     const now = performance.now();
     const elapsedMs = now - startEpoch;
     elapsedWhenPausedMs = elapsedMs;
-
-    // 経過秒（整数）
     const elapsedSec = Math.floor(elapsedMs / 1000);
 
-    // 先に終了判定：14:00 以上で停止→即リセット
+    // --- ステップ2: 終了判定（14:00到達チェック） ---
     if (elapsedSec >= END_TIME_SEC) {
-      // 表示は 14:00 に丸めてから終了
-      setTime(END_TIME_SEC * 1000);
-      finish();
+      setTime(END_TIME_SEC * 1000); // 表示を14:00に確定
+      finish(); // 終了処理→即リセット
       return;
     }
 
-    // 時刻表示を更新
+    // --- ステップ3: 時刻表示を更新（差分レンダリング） ---
     setTime(elapsedMs);
 
-    // 収縮の点滅（バッジ）制御
+    // --- ステップ4: 収縮状態を更新（差分レンダリング） ---
     setContraction(isInContraction(elapsedSec));
 
-    // 一度だけのメッセージを発火
+    // --- ステップ5a: 一度だけのメッセージを発火 ---
     for (const m of oneShotMilestones) {
       if (elapsedSec >= m.sec && !firedMilestones.has(m.sec)) {
         firedMilestones.add(m.sec);
@@ -271,30 +306,39 @@
       }
     }
 
-    // 2回目の収縮中の定期メッセージ
-    // 11:05（665s）, 12:00（720s）, 13:00（780s）で発火
-    // 11:00 は「間も無く最後の収縮が始まります」と被るため 11:05 にずらして段階的に情報提供
+    // --- ステップ5b: 周期的なメッセージを発火（午後収縮中のリマインダー） ---
     for (const t of periodicDuringSecond) {
       if (elapsedSec >= t && !firedPeriodic.has(t)) {
         firedPeriodic.add(t);
+        // 午後収縮期間中（11:00〜14:00）のみ
         if (elapsedSec >= (11 * 60) && elapsedSec <= (11 * 60 + 3 * 60)) {
           const text = '退避してください。';
           showMessage(text);
-          speak(text); // ★ 読み上げ
+          speak(text);
         }
       }
     }
 
+    // --- ステップ6: 次のフレームをスケジュール ---
     rAF = requestAnimationFrame(loop);
   }
 
   // ======== 補助関数 ========
-  // 表示用に mm:ss を更新
+  /**
+   * 表示用に mm:ss を更新（差分レンダリング最適化）
+   * @param {number} ms - ミリ秒単位の経過時間
+   */
   function setTime(ms) {
     const totalSec = Math.max(0, Math.floor(ms / 1000));
     const mm = String(Math.floor(totalSec / 60)).padStart(2, '0');
     const ss = String(totalSec % 60).padStart(2, '0');
-    timeEl.textContent = `${mm}:${ss}`;
+    const newTime = `${mm}:${ss}`;
+
+    // 変更があった時だけDOMを更新（パフォーマンス最適化）
+    if (newTime !== lastDisplayedTime) {
+      timeEl.textContent = newTime;
+      lastDisplayedTime = newTime;
+    }
   }
 
   // 現在が収縮ウィンドウ内か判定
@@ -306,17 +350,32 @@
     });
   }
 
-  // 収縮中の見た目（バッジ表示・背景点滅）を切替
+  /**
+   * 収縮中の見た目（バッジ表示・背景点滅）を切替（差分レンダリング最適化）
+   * @param {boolean} active - 収縮中かどうか
+   */
   function setContraction(active) {
+    // 状態が変わっていない場合はスキップ（パフォーマンス最適化）
+    if (active === lastContractionState) return;
+    lastContractionState = active;
+
     if (active) {
       badgeEl.classList.add('show');
       overlayEl.classList.add('blink');
-      statusEl.textContent = '計測中：収縮中';
+      const newStatus = '計測中：収縮中';
+      if (newStatus !== lastStatusText) {
+        statusEl.textContent = newStatus;
+        lastStatusText = newStatus;
+      }
     } else {
       badgeEl.classList.remove('show');
       overlayEl.classList.remove('blink');
       if (ticking) {
-        statusEl.textContent = '計測中';
+        const newStatus = '計測中';
+        if (newStatus !== lastStatusText) {
+          statusEl.textContent = newStatus;
+          lastStatusText = newStatus;
+        }
       }
     }
   }
