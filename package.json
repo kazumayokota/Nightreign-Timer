@@ -1,6 +1,6 @@
 {
   "name": "overlay-timer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Always-on-top overlay timer with global hotkey",
   "main": "main.js",
   "author": "Your Name",
@@ -26,8 +26,13 @@
           "target": "portable",
           "arch": ["x64"]
         }
-      ],
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
+      ]
+    },
+    "nsis": {
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-Portable-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
