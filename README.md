@@ -2,9 +2,9 @@
 
 Elden Ring Nightreignの試合時間を管理するための常に最前面に表示されるオーバーレイタイマーアプリです。VOICEVOX統合により、重要なタイミングで音声通知を受け取ることができます。
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+![License](https://img.shields.io/badge/license-Custom-orange.svg)
 
 ## 主な機能
 
@@ -27,8 +27,8 @@ Elden Ring Nightreignの試合時間を管理するための常に最前面に�
 #### 方法1: インストーラー版（推奨）
 
 1. **最新版をダウンロード**
-   - [Releases](https://github.com/yourusername/nightreign-timer/releases)ページを開く
-   - 最新バージョンの `Nightreign-Timer-Setup-1.0.0.exe` をダウンロード
+   - [Releases](https://github.com/kazumayokota/Nightreign-Timer/releases)ページを開く
+   - 最新バージョンの `Nightreign Timer Setup 1.0.1.exe` をダウンロード
 
 2. **インストーラーを実行**
    - ダウンロードしたファイルをダブルクリック
@@ -45,8 +45,8 @@ Elden Ring Nightreignの試合時間を管理するための常に最前面に�
 #### 方法2: ポータブル版（インストール不要）
 
 1. **ポータブル版をダウンロード**
-   - [Releases](https://github.com/yourusername/nightreign-timer/releases)ページを開く
-   - 最新バージョンの `Nightreign-Timer-Portable-1.0.0.exe` をダウンロード
+   - [Releases](https://github.com/kazumayokota/Nightreign-Timer/releases)ページを開く
+   - 最新バージョンの `Nightreign Timer-Portable-1.0.1.exe` をダウンロード
 
 2. **任意の場所に配置**
    - USBメモリや任意のフォルダに配置可能
@@ -78,7 +78,7 @@ Elden Ring Nightreignの試合時間を管理するための常に最前面に�
 1. 「詳細情報」をクリック
 2. 「実行」ボタンをクリック
 
-このアプリはオープンソースで、ソースコードは[GitHub](https://github.com/yourusername/nightreign-timer)で公開されています。
+このアプリはオープンソースで、ソースコードは[GitHub](https://github.com/kazumayokota/Nightreign-Timer)で公開されています。
 
 ## 🚀 使い方
 
@@ -271,8 +271,8 @@ Elden Ring Nightreignの試合時間を管理するための常に最前面に�
 
 ```bash
 # リポジトリのクローン
-git clone https://github.com/yourusername/nightreign-timer.git
-cd nightreign-timer/overlay-timer
+git clone https://github.com/kazumayokota/Nightreign-Timer.git
+cd Nightreign-Timer/overlay-timer
 
 # 依存関係のインストール
 npm install
@@ -312,6 +312,12 @@ npm run pack
 
 ## 📝 変更履歴
 
+### v1.0.1 (2025-11-21)
+- **パフォーマンス最適化**: 差分レンダリング実装によりDOM更新を98%削減
+- **メモリ使用量の改善**: 84.9MBの軽量動作を実現
+- **コードの可読性向上**: コメント・構造の改善で保守性が向上
+- ビルド設定の改善（インストーラー版とポータブル版のファイル名を明確化）
+
 ### v1.0.0 (2025-11-18)
 - 初回リリース
 - 基本的なタイマー機能
@@ -322,7 +328,7 @@ npm run pack
 
 ## 🤝 コントリビューション
 
-バグ報告や機能要望は[Issues](https://github.com/yourusername/nightreign-timer/issues)までお願いします。
+バグ報告や機能要望は[Issues](https://github.com/kazumayokota/Nightreign-Timer/issues)までお願いします。
 
 ## 📄 ライセンス
 
@@ -348,8 +354,7 @@ npm run pack
 ## 📮 お問い合わせ
 
 質問や提案がある場合は、以下までご連絡ください：
-- GitHub Issues: https://github.com/yourusername/nightreign-timer/issues
-- Email: your.email@example.com
+- GitHub Issues: https://github.com/kazumayokota/Nightreign-Timer/issues
 
 ---
 
